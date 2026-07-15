@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiniela Liga MX · Apertura 2026</title>
+<style>
+  :root{--verde:#1F6B3B; --verde-osc:#14532D; --verde-cl:#E7F2EA; --amarillo:#FFD34D; --gris:#f4f4f4; --rojo:#C0392B;}
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:system-ui,-apple-system,'Segoe UI',Arial,sans-serif; background:#f0f2f0; color:#222; padding-bottom:50px;}
+  header{background:var(--verde); color:#fff; padding:14px 16px; text-align:center;}
+  header h1{font-size:1.1rem;}
+  header p{font-size:.78rem; opacity:.85; margin-top:2px;}
+  .tabs{display:flex; background:var(--verde-osc); position:sticky; top:0; z-index:5;}
+  .tabs button{flex:1; padding:12px 2px; border:none; background:transparent; color:#cfe3d5; font-size:.88rem; font-weight:600; cursor:pointer;}
+  .tabs button.on{background:#fff; color:var(--verde-osc); border-radius:10px 10px 0 0;}
+  main{max-width:640px; margin:0 auto; background:#fff; min-height:70vh; padding:16px;}
+  .card{background:var(--gris); border-radius:10px; padding:12px; margin-bottom:14px;}
+  label{font-size:.85rem; font-weight:600; display:block; margin:8px 0 4px;}
+  input, select{width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; font-size:1rem; background:#fff;}
+  .fila{display:flex; align-items:center; gap:6px; padding:7px 0; border-bottom:1px solid #e2e2e2;}
+  .fila .eq{flex:1; font-size:.88rem; font-weight:600;}
+  .fila .eq small{display:block; font-weight:400; color:#777; font-size:.72rem;}
+  .lev{display:flex; gap:4px;}
+  .lev button{width:40px; height:36px; border-radius:8px; border:1.5px solid #bbb; background:#fff; font-weight:700; cursor:pointer; color:#555;}
+  .lev button.sel{background:var(--verde); border-color:var(--verde); color:#fff;}
+  .btn{display:block; width:100%; padding:12px; margin-top:12px; border:none; border-radius:10px; background:var(--verde); color:#fff; font-size:1rem; font-weight:700; cursor:pointer;}
+  .btn:disabled{background:#999;}
+  .btn.sec{background:#fff; color:var(--verde-osc); border:2px solid var(--verde);}
+  table{width:100%; border-collapse:collapse; font-size:.85rem; margin-top:10px;}
+  th{background:var(--verde); color:#fff; padding:6px 3px; font-size:.75rem;}
+  td{padding:6px 3px; border-bottom:1px solid #e5e5e5; text-align:center;}
+  td.izq{text-align:left; font-weight:600;}
+  tr.top td{background:var(--verde-cl); font-weight:700;}
+  .aviso{font-size:.82rem; color:#666; margin-top:8px;}
+  .ganador{background:var(--amarillo); border-radius:8px; padding:10px; font-weight:700; margin-top:10px; text-align:center;}
+  .err{color:var(--rojo); font-weight:600; margin-top:8px; font-size:.9rem;}
+  .ok{color:var(--verde-osc); font-weight:600; margin-top:8px; font-size:.9rem;}
+  .reloj{background:var(--verde-cl); color:var(--verde-osc); border-radius:8px; padding:8px; text-align:center; font-weight:700; margin-bottom:10px; font-size:.9rem;}
+  .reloj.rojo{background:#FDEDEC; color:var(--rojo);}
+  .pill{display:inline-block; background:var(--verde-cl); color:var(--verde-osc); border-radius:20px; padding:3px 10px; font-size:.78rem; font-weight:700; margin:2px;}
+  .picks-mini{font-family:monospace; font-size:.78rem; letter-spacing:1px;}
+  h2{font-size:1rem; color:var(--verde-osc); margin:14px 0 6px;}
+  .cargando{text-align:center; color:#888; padding:20px;}
+</style>
+</head>
+<body>
+<header>
+  <h1>⚽ QUINIELA LIGA MX · APERTURA 2026</h1>
+  <p>1 punto por acierto · L = gana Local · E = Empate · V = gana Visitante</p>
+</header>
+<div class="tabs">
+  <button id="tab0" class="on" onclick="tab(0)">📝 Pronosticar</button>
+  <button id="tab1" onclick="tab(1)">📊 Tablas</button>
+  <button id="tab2" onclick="tab(2)">🔐 Organizador</button>
+</div>
+<main>
+
+<section id="v0">
+  <div class="card">
+    <label>Tu nombre</label>
+    <input type="text" id="pNombre" maxlength="20" placeholder="Ej. Lupita">
+    <label>Jornada</label>
+    <select id="pJor" onchange="pintaPick()"></select>
+  </div>
+  <div id="pReloj"></div>
+  <div id="pPartidos"></div>
+  <button class="btn" id="pEnviar" onclick="enviaPick()">✅ Enviar mi pronóstico</button>
+  <div id="pMsg"></div>
+  <p class="aviso">Puedes corregir tu pronóstico enviándolo de nuevo con el mismo nombre, mientras la jornada no haya cerrado. Los pronósticos de los demás se muestran hasta que cierra la jornada.</p>
+</section>
+
+<section id="v1" style="display:none">
+  <div class="card">
+    <label>Jornada</label>
+    <select id="tJor" onchange="pintaTabla()"></select>
+  </div>
+  <div id="tCuerpo" class="cargando">Cargando…</div>
+  <h2>🏆 Tabla general del torneo</h2>
+  <div id="tGeneral" class="cargando">Cargando…</div>
+</section>
+
+<section id="v2" style="display:none">
+  <div class="card">
+    <label>PIN del organizador</label>
+    <input type="password" id="aPin" placeholder="PIN">
+    <label>Jornada</label>
+    <select id="aJor" onchange="pintaAdmin()"></select>
+    <label>Cuota por persona ($)</label>
+    <input type="number" id="aCuota" min="0" placeholder="50">
+    <button class="btn sec" onclick="guardaCuota()">Guardar cuota</button>
+  </div>
+  <h2>Capturar resultados</h2>
+  <div id="aPartidos"></div>
+  <button class="btn" onclick="guardaRes()">💾 Guardar resultados</button>
+  <div id="aMsg"></div>
+</section>
+</main>
+
+<script>
+const CIERRES = {1:"2026-07-16T19:00:00-06:00",2:"2026-07-21T20:00:00-06:00",3:"2026-07-31T20:00:00-06:00",4:"2026-08-15T19:00:00-06:00",5:"2026-08-21T20:00:00-06:00",6:"2026-08-28T17:00:00-06:00",7:"2026-09-04T20:00:00-06:00",8:"2026-09-11T17:00:00-06:00",9:"2026-09-18T20:00:00-06:00",10:"2026-09-25T19:00:00-06:00",11:"2026-10-09T17:00:00-06:00",12:"2026-10-16T17:00:00-06:00",13:"2026-10-20T16:00:00-06:00",14:"2026-10-23T17:00:00-06:00",15:"2026-10-30T19:00:00-06:00",16:"2026-11-06T17:00:00-06:00",17:"2026-11-20T19:00:00-06:00"};
+const cache = {};
+async function getJornada(j, fresco){
+  if (!fresco && cache[j]) return cache[j];
+  const r = await fetch("/api/jornada?j="+j, {cache:"no-store"});
+  cache[j] = await r.json();
+  return cache[j];
+}
+function proxima(){
+  const ahora = new Date();
+  for (let j=1;j<=17;j++) if (ahora < new Date(CIERRES[j])) return j;
+  return 17;
+}
+function llena(id){
+  const s = document.getElementById(id); s.innerHTML="";
+  for (let j=1;j<=17;j++){
+    const o=document.createElement("option"); o.value=j; o.textContent="Jornada "+j;
+    s.appendChild(o);
+  }
+  s.value = proxima();
+}
+function tab(t){
+  for (let i=0;i<3;i++){
+    document.getElementById("v"+i).style.display = i===t?"":"none";
+    document.getElementById("tab"+i).classList.toggle("on", i===t);
+  }
+  if (t===1){ pintaTabla(); pintaGeneral(); }
+  if (t===2){ pintaAdmin(); }
+}
+function filaPartido(pt, i, sel, pref){
+  return '<div class="fila"><div class="eq">'+pt[1]+' vs '+pt[2]+'<small>'+pt[0]+'</small></div>'+
+    '<div class="lev">'+["L","E","V"].map(x=>'<button data-i="'+i+'" data-v="'+x+'" class="'+(pref&&pref[i]===x?"sel":"")+'" onclick="'+sel+'(this)">'+x+'</button>').join("")+'</div></div>';
+}
+function marca(btn, arr){
+  arr[+btn.dataset.i] = btn.dataset.v;
+  btn.parentElement.querySelectorAll("button").forEach(b=>b.classList.toggle("sel", b===btn));
+}
+
+/* ---- pronosticar ---- */
+let pSel = Array(9).fill(null);
+window.mp = (b)=>marca(b, pSel);
+async function pintaPick(){
+  pSel = Array(9).fill(null);
+  const j = +document.getElementById("pJor").value;
+  const d = await getJornada(j);
+  document.getElementById("pPartidos").innerHTML = d.partidos.map((pt,i)=>filaPartido(pt,i,"mp")).join("");
+  document.getElementById("pMsg").innerHTML="";
+  reloj(j);
+}
+let relojInt = null;
+function reloj(j){
+  clearInterval(relojInt);
+  const div = document.getElementById("pReloj");
+  function tic(){
+    const ms = new Date(CIERRES[j]) - new Date();
+    const btn = document.getElementById("pEnviar");
+    if (ms <= 0){
+      div.innerHTML = '<div class="reloj rojo">🔒 Esta jornada ya cerró</div>';
+      btn.disabled = true; clearInterval(relojInt); return;
+    }
+    btn.disabled = false;
+    const dd = Math.floor(ms/86400000), hh = Math.floor(ms%86400000/3600000), mm = Math.floor(ms%3600000/60000);
+    div.innerHTML = '<div class="reloj">⏰ Cierra en '+(dd?dd+"d ":"")+hh+"h "+mm+"m</div>";
+  }
+  tic(); relojInt = setInterval(tic, 30000);
+}
+async function enviaPick(){
+  const msg = document.getElementById("pMsg");
+  const nombre = document.getElementById("pNombre").value.trim();
+  if (!nombre){ msg.innerHTML='<p class="err">Escribe tu nombre.</p>'; return; }
+  if (pSel.some(x=>!x)){ msg.innerHTML='<p class="err">Te faltan '+pSel.filter(x=>!x).length+' partido(s) por marcar.</p>'; return; }
+  msg.innerHTML='<p class="aviso">Enviando…</p>';
+  try{
+    const r = await fetch("/api/pick",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({j:+document.getElementById("pJor").value, nombre, picks:pSel})});
+    const d = await r.json();
+    msg.innerHTML = r.ok ? '<p class="ok">✅ '+d.mensaje+'</p>' : '<p class="err">'+d.error+'</p>';
+    if (r.ok) delete cache[+document.getElementById("pJor").value];
+  }catch(e){ msg.innerHTML='<p class="err">Error de conexión. Intenta de nuevo.</p>'; }
+}
+
+/* ---- tablas ---- */
+async function pintaTabla(){
+  const j = +document.getElementById("tJor").value;
+  const div = document.getElementById("tCuerpo");
+  div.innerHTML = '<div class="cargando">Cargando…</div>';
+  const d = await getJornada(j, true);
+  let h = "";
+  if (!d.cerrada){
+    h += '<p class="aviso">La jornada '+j+' sigue abierta. Ya pronosticaron <b>'+d.participantes.length+'</b>:</p>';
+    h += d.participantes.length ? d.participantes.map(n=>'<span class="pill">'+n+'</span>').join("") : '<p class="aviso">Nadie todavía. ¡Sé el primero!</p>';
+    if (d.cuota) h += '<p class="aviso">Bote acumulado: <b>$'+d.bote.toLocaleString()+'</b> ('+d.participantes.length+' × $'+d.cuota+')</p>';
+  } else {
+    if (d.cuota) h += '<p class="aviso">Bote: <b>$'+d.bote.toLocaleString()+'</b></p>';
+    if (!d.filas || !d.filas.length){ h += '<p class="aviso">Nadie participó en esta jornada.</p>'; }
+    else {
+      h += '<table><tr><th>#</th><th style="text-align:left">Participante</th><th>Pronóstico</th><th>Pts</th></tr>';
+      d.filas.forEach((f,i)=>{
+        const top = d.completa && d.ganadores.includes(f.nombre);
+        h += '<tr class="'+(top?"top":"")+'"><td>'+(i+1)+'</td><td class="izq">'+f.nombre+'</td><td class="picks-mini">'+f.picks.join("")+'</td><td>'+(f.pts===null?"—":f.pts)+'</td></tr>';
+      });
+      h += '</table>';
+      if (d.res && d.res.some(x=>x)) h += '<p class="aviso">Resultados: <span class="picks-mini">'+d.res.map(x=>x||"·").join("")+'</span></p>';
+      if (d.completa && d.ganadores.length)
+        h += '<div class="ganador">🏆 '+(d.ganadores.length>1?"Empate: "+d.ganadores.join(" y ")+" — se divide el bote":"Ganador: "+d.ganadores[0]+(d.cuota?" — se lleva $"+d.bote.toLocaleString():""))+'</div>';
+      else h += '<p class="aviso">Resultados pendientes de capturar.</p>';
+    }
+  }
+  div.innerHTML = h;
+}
+async function pintaGeneral(){
+  const div = document.getElementById("tGeneral");
+  try{
+    const r = await fetch("/api/general",{cache:"no-store"});
+    const d = await r.json();
+    if (!d.filas.length){ div.innerHTML='<p class="aviso">Se llenará al capturar los primeros resultados.</p>'; return; }
+    let h = '<table><tr><th>Lugar</th><th style="text-align:left">Participante</th><th>Puntos</th></tr>';
+    d.filas.forEach((f,i)=>{ h += '<tr class="'+(i===0?"top":"")+'"><td>'+(i+1)+'</td><td class="izq">'+f.nombre+'</td><td>'+f.pts+'</td></tr>'; });
+    div.innerHTML = h + '</table>';
+  }catch(e){ div.innerHTML='<p class="err">No se pudo cargar.</p>'; }
+}
+
+/* ---- organizador ---- */
+let aSel = Array(9).fill(null);
+window.ma = (b)=>marca(b, aSel);
+async function pintaAdmin(){
+  const j = +document.getElementById("aJor").value;
+  const d = await getJornada(j, true);
+  aSel = (d.res && d.res.slice()) || Array(9).fill(null);
+  document.getElementById("aPartidos").innerHTML = d.partidos.map((pt,i)=>filaPartido(pt,i,"ma",aSel)).join("");
+  if (d.cuota) document.getElementById("aCuota").value = d.cuota;
+  document.getElementById("aMsg").innerHTML="";
+}
+async function llamaAdmin(body, msgId){
+  const msg = document.getElementById(msgId);
+  body.pin = document.getElementById("aPin").value;
+  if (!body.pin){ msg.innerHTML='<p class="err">Escribe el PIN.</p>'; return; }
+  msg.innerHTML='<p class="aviso">Guardando…</p>';
+  try{
+    const r = await fetch("/api/admin",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    const d = await r.json();
+    msg.innerHTML = r.ok ? '<p class="ok">✅ '+d.mensaje+'</p>' : '<p class="err">'+d.error+'</p>';
+    if (r.ok){ Object.keys(cache).forEach(k=>delete cache[k]); }
+  }catch(e){ msg.innerHTML='<p class="err">Error de conexión.</p>'; }
+}
+function guardaRes(){ llamaAdmin({accion:"resultados", j:+document.getElementById("aJor").value, res:aSel}, "aMsg"); }
+function guardaCuota(){ llamaAdmin({accion:"cuota", cuota:+document.getElementById("aCuota").value}, "aMsg"); }
+
+/* ---- arranque ---- */
+llena("pJor"); llena("tJor"); llena("aJor");
+pintaPick();
+</script>
+</body>
+</html>
