@@ -18,9 +18,18 @@
   .card{background:var(--gris); border-radius:10px; padding:12px; margin-bottom:14px;}
   label{font-size:.85rem; font-weight:600; display:block; margin:8px 0 4px;}
   input, select{width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; font-size:1rem; background:#fff;}
-  .fila{display:flex; align-items:center; gap:6px; padding:7px 0; border-bottom:1px solid #e2e2e2;}
-  .fila .eq{flex:1; font-size:.88rem; font-weight:600;}
-  .fila .eq small{display:block; font-weight:400; color:#777; font-size:.72rem;}
+  .fila{display:flex; align-items:center; gap:8px; padding:9px 0; border-bottom:1px solid #e2e2e2;}
+  .fila .eq{flex:1; font-size:.86rem; font-weight:600; min-width:0;}
+  .fila .eq .duelo{display:flex; align-items:center; gap:5px;}
+  .fila .eq .team{display:flex; align-items:center; gap:5px; flex:1; min-width:0;}
+  .fila .eq .team.visita{flex-direction:row-reverse; text-align:right;}
+  .fila .eq .team span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .fila .eq .vs{color:#aaa; font-size:.7rem; font-weight:700; flex:0 0 auto;}
+  .fila .eq small{display:block; font-weight:400; color:#777; font-size:.72rem; margin-top:3px;}
+  .logo{width:26px; height:26px; object-fit:contain; flex:0 0 auto;}
+  .badge{width:26px; height:26px; border-radius:50%; flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; color:#fff; font-size:.58rem; font-weight:800; letter-spacing:.3px;}
+  .logo-sm{width:18px; height:18px; object-fit:contain; vertical-align:middle; margin-right:3px;}
+  .badge-sm{width:18px; height:18px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; color:#fff; font-size:.5rem; font-weight:800; vertical-align:middle; margin-right:3px;}
   .lev{display:flex; gap:4px;}
   .lev button{width:40px; height:36px; border-radius:8px; border:1.5px solid #bbb; background:#fff; font-weight:700; cursor:pointer; color:#555;}
   .lev button.sel{background:var(--verde); border-color:var(--verde); color:#fff;}
@@ -98,6 +107,37 @@
 </main>
 
 <script>
+// escudos oficiales (thesportsdb) + color de respaldo si un logo no carga
+const B = "https://r2.thesportsdb.com/images/media/team/badge/";
+const LOGOS = {
+ "Necaxa":B+"tqdk9e1779772432.png","Atlante":B+"wcf2r51754018201.png","Tijuana":B+"b0mky81779772352.png",
+ "Tigres":B+"lh80fx1701423708.png","Atl. San Luis":B+"9kgjme1593448412.png","Cruz Azul":B+"wcd2yi1781543370.png",
+ "León":B+"pc9gro1752393439.png","Atlas":B+"svvyvw1473541813.png","Juárez":B+"b4oy071567446336.png",
+ "Puebla":B+"h0jgg51593451845.png","Pumas":B+"o01nvl1695734937.png","Pachuca":B+"k9duyw1747334895.png",
+ "Chivas":B+"mp1box1593452087.png","Toluca":B+"y64wy91523913186.png","Monterrey":B+"yglj911721542561.png",
+ "Santos":B+"kg9gzh1779771734.png","Querétaro":B+"024n481781543211.png","América":B+"amy1xs1581857392.png"
+};
+const BADGE = {
+ "Necaxa":["#E30613","NEC"],"Atlante":["#003DA5","ATL"],"Tijuana":["#B3122A","TIJ"],"Tigres":["#F4B400","TIG"],
+ "Atl. San Luis":["#C8102E","SL"],"Cruz Azul":["#0033A0","CAZ"],"León":["#0A7B3E","LEÓ"],"Atlas":["#9E1B32","ATS"],
+ "Juárez":["#009B48","JUÁ"],"Puebla":["#12284B","PUE"],"Pumas":["#14213D","PUM"],"Pachuca":["#1B3A6B","PAC"],
+ "Chivas":["#C8102E","CHI"],"Toluca":["#C8102E","TOL"],"Monterrey":["#003DA5","MTY"],"Santos":["#0A7B3E","SAN"],
+ "Querétaro":["#14213D","QRO"],"América":["#F2C500","AME"]
+};
+function logoFail(img, n){
+  const b = BADGE[n] || ["#1F6B3B","?"];
+  const s = document.createElement("span");
+  s.className = img.classList.contains("logo-sm") ? "badge-sm" : "badge";
+  s.style.background = b[0]; s.textContent = b[1];
+  img.replaceWith(s);
+}
+function escudo(n, cls){
+  cls = cls || "logo";
+  const u = LOGOS[n];
+  if (!u){ const b = BADGE[n]||["#1F6B3B","?"]; const c = cls==="logo-sm"?"badge-sm":"badge";
+    return '<span class="'+c+'" style="background:'+b[0]+'">'+b[1]+'</span>'; }
+  return '<img class="'+cls+'" src="'+u+'" alt="'+n+'" loading="lazy" onerror="logoFail(this,\''+n.replace(/'/g,"\\'")+'\')">';
+}
 const CIERRES = {1:"2026-07-16T19:00:00-06:00",2:"2026-07-21T20:00:00-06:00",3:"2026-07-31T20:00:00-06:00",4:"2026-08-15T19:00:00-06:00",5:"2026-08-21T20:00:00-06:00",6:"2026-08-28T17:00:00-06:00",7:"2026-09-04T20:00:00-06:00",8:"2026-09-11T17:00:00-06:00",9:"2026-09-18T20:00:00-06:00",10:"2026-09-25T19:00:00-06:00",11:"2026-10-09T17:00:00-06:00",12:"2026-10-16T17:00:00-06:00",13:"2026-10-20T16:00:00-06:00",14:"2026-10-23T17:00:00-06:00",15:"2026-10-30T19:00:00-06:00",16:"2026-11-06T17:00:00-06:00",17:"2026-11-20T19:00:00-06:00"};
 const cache = {};
 async function getJornada(j, fresco){
@@ -128,7 +168,13 @@ function tab(t){
   if (t===2){ pintaAdmin(); }
 }
 function filaPartido(pt, i, sel, pref){
-  return '<div class="fila"><div class="eq">'+pt[1]+' vs '+pt[2]+'<small>'+pt[0]+'</small></div>'+
+  return '<div class="fila"><div class="eq">'+
+    '<div class="duelo">'+
+      '<span class="team">'+escudo(pt[1])+'<span>'+pt[1]+'</span></span>'+
+      '<span class="vs">VS</span>'+
+      '<span class="team visita">'+escudo(pt[2])+'<span>'+pt[2]+'</span></span>'+
+    '</div>'+
+    '<small>'+pt[0]+'</small></div>'+
     '<div class="lev">'+["L","E","V"].map(x=>'<button data-i="'+i+'" data-v="'+x+'" class="'+(pref&&pref[i]===x?"sel":"")+'" onclick="'+sel+'(this)">'+x+'</button>').join("")+'</div></div>';
 }
 function marca(btn, arr){
